@@ -1,19 +1,34 @@
-// Генерирует анимированный GIF из случайных
-// фигур Лиссажу
 package main
 
 import (
-	"bytes"
+	"fmt"
 	"image"
 	"image/color"
 	"image/gif"
 	"io"
-	"io/ioutil"
+	"log"
 	"math"
 	"math/rand"
+	"net/http"
 	"os"
 	"time"
 )
+
+func main() {
+	handler1 := func(w http.ResponseWriter, r *http.Request) {
+		lissajous(w)
+	}
+
+	http.HandleFunc("/", handler1) // Каждый запрос вызывет обработчик
+
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+}
+
+// Обработчик возврщает компонент пути из URL запроса.
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "URL.Path = %q\n", r.URL.Path)
+	fmt.Fprintf(os.Stderr, "URL.Path = %q\n", r.URL.Path)
+}
 
 var palette = []color.Color{color.Black, color.White,
 	color.RGBA{0x00, 0xff, 0x00, 0xff}}
@@ -24,10 +39,6 @@ const (
 	greenIndex = 2 // Зеленый - третий цвет
 )
 
-func main() {
-	f, _ := os.Open("file.gif")
-	lissajous(f)
-}
 func lissajous(out io.Writer) {
 	const (
 		cycles  = 5     // Количество полных колебаний
@@ -52,13 +63,7 @@ func lissajous(out io.Writer) {
 		anim.Delay = append(anim.Delay, delay)
 		anim.Image = append(anim.Image, img)
 	}
-	buf := new(bytes.Buffer)
-	err := gif.EncodeAll(buf, &anim) // Примечание: обрабатываем ошибки
-	if err != nil {
-		panic(err)
-	}
-	err = ioutil.WriteFile("test.gif", buf.Bytes(), 0644)
-	if err != nil {
-		panic(err)
-	}
+
+	gif.EncodeAll(out, &anim) // Примечание: игнорируем ошибки
+
 }
