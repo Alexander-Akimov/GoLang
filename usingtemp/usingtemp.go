@@ -12,5 +12,8 @@ func main() {
 
 	// fmt.Print(celGrad)
 
-	fmt.Printf("%g\n", tempconv.FreezingC)
+	fmt.Printf("%s\n", tempconv.BoilingC)
+	boilinfF := tempconv.CToF(tempconv.BoilingC)
+	fmt.Println(boilinfF)
+	fmt.Printf("%g\n", boilinfF)
 }
