@@ -38,9 +38,12 @@ func ServePage(w http.ResponseWriter, r *http.Request) {
 		Scan(&thisPage.Title, &thisPage.Content, &thisPage.Date)
 
 	if err != nil {
-		log.Println("Couldn't get page:", pageGUID)
-		log.Println(err.Error())
+		http.Error(w, http.StatusText(404), http.StatusNotFound)
+		log.Println("Couldn't get page!")
+		// log.Println("Couldn't get page:", pageGUID)
+		// log.Println(err.Error())
 	}
+
 	html := `<html><head><title>` + thisPage.Title +
 		`</title></head><body><h1>` + thisPage.Title + `</h1><div>` +
 		thisPage.Content + `</div></body></html>`
