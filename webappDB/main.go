@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
@@ -23,31 +24,11 @@ const (
 var database *sql.DB
 
 type Page struct {
-	Title   string
-	Content string
-	Date    string
-}
-
-func ServePage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	pageGUID := vars["guid"]
-	thisPage := Page{}
-	fmt.Println(pageGUID)
-	err := database.QueryRow("SELECT page_title, page_content, page_date"+
-		" FROM pages WHERE page_guid=?", pageGUID).
-		Scan(&thisPage.Title, &thisPage.Content, &thisPage.Date)
-
-	if err != nil {
-		http.Error(w, http.StatusText(404), http.StatusNotFound)
-		log.Println("Couldn't get page!")
-		// log.Println("Couldn't get page:", pageGUID)
-		// log.Println(err.Error())
-	}
-
-	html := `<html><head><title>` + thisPage.Title +
-		`</title></head><body><h1>` + thisPage.Title + `</h1><div>` +
-		thisPage.Content + `</div></body></html>`
-	fmt.Fprintln(w, html)
+	Title      string
+	RawContent string
+	Content    template.HTML
+	Date       string
+	GUID       string
 }
 
 func main() {
@@ -62,7 +43,66 @@ func main() {
 	database = db
 	routes := mux.NewRouter()
 	routes.HandleFunc("/page/{guid:[0-9a-zA\\-]+}", ServePage)
+	routes.HandleFunc("/", RedirIndex)
+	routes.HandleFunc("/home", ServeIndex)
 	http.Handle("/", routes)
 	http.ListenAndServe(PORT, nil)
 
+}
+func RedirIndex(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/home", 301)
+}
+
+func ServeIndex(w http.ResponseWriter, r *http.Request) {
+	var Pages = []Page{}
+	pages, err := database.Query("SELECT page_title, page_content, page_date, page_guid FROM pages ORDER BY ? DESC", "page_date")
+	if err != nil {
+		fmt.Fprintln(w, err.Error)
+		log.Println(err.Error())
+	}
+	defer pages.Close()
+	for pages.Next() {
+		thisPage := Page{}
+		pages.Scan(&thisPage.Title, &thisPage.RawContent, &thisPage.Date, &thisPage.GUID)
+		thisPage.Content = template.HTML(thisPage.RawContent)
+		Pages = append(Pages, thisPage)
+	}
+	t, _ := template.ParseFiles("templates/index.html")
+	t.Execute(w, Pages)
+}
+
+func ServePage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	pageGUID := vars["guid"]
+	thisPage := Page{}
+	fmt.Println(pageGUID)
+	err := database.QueryRow("SELECT page_title, page_content, page_date FROM pages WHERE page_guid=?", pageGUID).
+		Scan(&thisPage.Title, &thisPage.RawContent, &thisPage.Date)
+	thisPage.Content = template.HTML(thisPage.RawContent)
+
+	if err != nil {
+		http.Error(w, http.StatusText(404), http.StatusNotFound)
+		log.Println("Couldn't get page!")
+		// log.Println("Couldn't get page:", pageGUID)
+		log.Println(err.Error())
+	}
+
+	// html := `<html><head><title>` + thisPage.Title +
+	// 	`</title></head><body><h1>` + thisPage.Title + `</h1><div>` +
+	// 	thisPage.Content + `</div></body></html>`
+	// fmt.Fprintln(w, html)
+	t, _ := template.ParseFiles("templates/blog.html") //need to handle errors if file
+	//isn't accassible
+	t.Execute(w, thisPage) //handle errors if referencing struct values that
+}
+
+func (p Page) TruncatedText() template.HTML {
+	chars := 0
+	for i, _ := range p.Content {
+		chars++
+		if chars > 150 {
+			return template.HTML(p.RawContent[:i] + ` ...`)
+		}
+	}
+	return template.HTML(p.RawContent)
 }
