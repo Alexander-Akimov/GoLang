@@ -56,6 +56,10 @@ func main() {
 		log.Println("Couldn't connect to: " + DBDbase)
 		log.Println(err.Error())
 	}
+
+	myStr := "never nil"
+	fmt.Println(myStr)
+
 	database = db
 	routes := mux.NewRouter()
 	routes.HandleFunc("/page/{guid:[0-9a-zA\\-]+}", ServePage)
