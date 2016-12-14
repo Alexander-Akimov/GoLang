@@ -41,7 +41,14 @@ func main() {
 		log.Println(err.Error())
 	}
 	database = db
+
 	routes := mux.NewRouter()
+	// routes.HandleFunc("/api/pages", APIPage).
+	// 	Methods("GET").
+	// 	Schemes("https")
+	// 	routes.HandleFunc("/api/pages/{guid:[0-9a-zA\\-]+}", APIPage).
+	// Methods("GET").
+	// 	Schemes("https")
 	routes.HandleFunc("/page/{guid:[0-9a-zA\\-]+}", ServePage)
 	routes.HandleFunc("/", RedirIndex)
 	routes.HandleFunc("/home", ServeIndex)
