@@ -1,0 +1,31 @@
+generate certificate on windows 8
+	http://www.faqforge.com/windows/use-openssl-on-windows/
+		https://code.google.com/archive/p/openssl-for-windows/downloads
+	
+	1) Generating key
+	genrsa -out key.pem
+	genrsa -des3 -out server.key 4096
+	genrsa -out server.key 2048
+
+	
+	2) Certificate request
+		req -new -key key.pem -out cert.pem -config C:\openssl.cnf
+		req -out cert.csr -key server.key -new -sha256 -config C:\openssl.cnf
+		
+		
+	Unable to load config info from c:openssl/ssl/openssl.cnf
+		http://stackoverflow.com/questions/14459078/unable-to-load-config-info-from-usr-local-ssl-openssl-cnf
+	country name two letter code
+		https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+		
+	3) sign the certificate request
+		req -x509 -days 365 -key key.pem -in cert.pem -out certificate.pem -config C:\openssl.cnf
+		req -x509 -days 365 -key server.key -in cert.csr -out certificate.crt -config C:\openssl.cnf
+		req -x509 -days 365 -key www.mydomain.key -in www.mydomain.com.sha256.csr -out certificate.crt -config C:\openssl.cnf
+		
+	net::ERR_CERT_COMMON_NAME_INVALID
+		
+		
+		
+		
+		
