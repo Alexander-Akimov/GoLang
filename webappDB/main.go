@@ -57,6 +57,10 @@ func main() {
 		log.Println("Couldn't connect to: " + DBDbase)
 		log.Println(err.Error())
 	}
+
+	myStr := "never nil"
+	fmt.Println(myStr)
+
 	database = db
 
 	routes := mux.NewRouter()
