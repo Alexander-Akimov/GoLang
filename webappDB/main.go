@@ -65,10 +65,12 @@ func main() {
 	routes.HandleFunc("/api/comments", APICommentPost).Methods("POST")
 	routes.HandleFunc("/api/comments/{id:[\\w\\d\\-]+}", APICommentPut).Methods("PUT")
 	routes.HandleFunc("/page/{guid:[0-9a-zA\\-]+}", ServePage)
+	//routes.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 	routes.HandleFunc("/", RedirIndex)
 	routes.HandleFunc("/home", ServeIndex)
 	http.Handle("/", routes)
-	http.Handle("/js", http.FileServer(http.Dir("./js/")))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	//http.Handle("/js", http.FileServer(http.Dir("./js/")))
 
 	//http.ListenAndServe(PORT, nil)
 
